@@ -2,8 +2,10 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import BottomNav from '@/components/layout/BottomNav'
+import MobileHeader from '@/components/layout/MobileHeader'
 import SessionProvider from '@/components/layout/SessionProvider'
 import AIChatWidget from '@/components/ai/AIChatWidget'
+import SlipUploadFAB from '@/components/transactions/SlipUploadFAB'
 
 export default async function AppLayout({
   children,
@@ -24,10 +26,12 @@ export default async function AppLayout({
           <Sidebar />
         </div>
         <main className="flex-1 overflow-auto pb-20 md:pb-0">
+          <MobileHeader />
           {children}
         </main>
       </div>
       <BottomNav />
+      <SlipUploadFAB />
       <AIChatWidget />
     </SessionProvider>
   )

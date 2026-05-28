@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
+import AIPlanModal from '@/components/budget/AIPlanModal'
 
 interface BudgetRow {
   categoryId: string
@@ -48,6 +49,7 @@ export default function BudgetPage() {
   const [data, setData] = useState<BudgetData | null>(null)
   const [editing, setEditing] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState<string | null>(null)
+  const [showAIPlan, setShowAIPlan] = useState(false)
   const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const load = useCallback((m: number, y: number, signal?: AbortSignal) => {
@@ -119,6 +121,12 @@ export default function BudgetPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">ตั้งวงเงินรายจ่ายแต่ละหมวดต่อเดือน</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowAIPlan(true)}
+            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl px-3 py-2 transition-colors whitespace-nowrap"
+          >
+            🤖 วางแผนด้วย AI
+          </button>
           <select
             value={month}
             onChange={e => setMonth(parseInt(e.target.value))}
@@ -234,6 +242,15 @@ export default function BudgetPage() {
         <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
           {totalNoBudget} หมวดยังไม่ได้ตั้งวงเงิน — พิมพ์ตัวเลขในช่องเพื่อบันทึกอัตโนมัติ
         </p>
+      )}
+
+      {showAIPlan && (
+        <AIPlanModal
+          month={month}
+          year={year}
+          onClose={() => setShowAIPlan(false)}
+          onApply={() => load(month, year)}
+        />
       )}
     </div>
   )
