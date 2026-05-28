@@ -22,7 +22,10 @@
     "registerButton": "Sign Up",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "loginError": "Invalid email or password"
+    "loginError": "Invalid email or password",
+    "invalidEmail": "Invalid email format",
+    "nameRequired": "Name must be at least 2 characters",
+    "passwordMinLength": "Password must be at least 6 characters"
   },
   "dashboard": {
     "totalBalance": "Total Balance",
@@ -53,7 +56,8 @@
     "aiAnalyzing": "Analyzing...",
     "noTransactions": "No transactions yet",
     "filter": "Filter",
-    "search": "Search"
+    "search": "Search",
+    "invalidAmount": "Please enter a valid amount (greater than 0)"
   },
   "category": {
     "food": "Food & Drinks",

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { emitDataChanged } from '@/lib/hooks/useDataRefresh'
 
@@ -80,7 +80,19 @@ export default function AIChatWidget() {
   const [loading, setLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const widgetRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!open) return
+    function handleClickOutside(e: MouseEvent) {
+      if (widgetRef.current && !widgetRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
 
   async function send() {
     if (!input.trim() || loading) return
@@ -129,6 +141,7 @@ export default function AIChatWidget() {
     <>
       {/* Chat panel */}
       <div
+        ref={widgetRef}
         className={`fixed bottom-20 md:bottom-24 right-2 md:right-6 z-50 w-[calc(100vw-1rem)] max-w-sm transition-all duration-300 origin-bottom-right ${
           open ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'
         }`}

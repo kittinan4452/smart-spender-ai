@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import Google from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/db/prisma'
 import bcrypt from 'bcryptjs'
@@ -17,6 +18,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/th/login',
   },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     Credentials({
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials)
@@ -59,10 +64,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
         token.role = (user as { role?: string }).role
+      }
+      // Google OAuth ไม่ส่ง role มาด้วย ดึงจาก DB แทน
+      if (token.id && !token.role) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        })
+        token.role = dbUser?.role
       }
       return token
     },

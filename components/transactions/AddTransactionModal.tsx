@@ -34,6 +34,13 @@ interface AIResult {
 export default function AddTransactionModal({ categories, onClose, onSaved }: Props) {
   const t = useTranslations('transaction')
 
+  function formatAmount(raw: string): string {
+    if (!raw) return ''
+    const [int, dec] = raw.split('.')
+    const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return dec !== undefined ? `${formatted}.${dec}` : formatted
+  }
+
   const [mode, setMode] = useState<Mode>('manual')
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [amount, setAmount] = useState('')
@@ -139,7 +146,12 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
   }
 
   async function handleSave() {
-    if (!amount || !description || !categoryId) return
+    const parsedAmount = parseFloat(amount)
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error(t('invalidAmount'))
+      return
+    }
+    if (!description || !categoryId) return
     setSaving(true)
 
     try {
@@ -147,7 +159,7 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: parsedAmount,
           type,
           description,
           categoryId,
@@ -304,9 +316,13 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount')} (฿)</label>
               <input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={formatAmount(amount)}
+                onChange={e => {
+                  const raw = e.target.value.replace(/,/g, '')
+                  if (raw === '' || /^\d*\.?\d{0,2}$/.test(raw)) setAmount(raw)
+                }}
                 className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                 placeholder="0.00"
               />
@@ -370,7 +386,7 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || !amount || !description || !categoryId}
+              disabled={saving || !amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || !description || !categoryId}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl py-3 text-sm font-medium transition-colors"
             >
               {saving ? '...' : t('save')}

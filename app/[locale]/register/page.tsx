@@ -17,8 +17,17 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function validate() {
+    if (name.trim().length < 2) return t('nameRequired')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return t('invalidEmail')
+    if (password.length < 6) return t('passwordMinLength')
+    return null
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const validationError = validate()
+    if (validationError) { setError(validationError); return }
     setLoading(true)
     setError('')
 
