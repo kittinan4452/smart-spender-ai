@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { useParams } from 'next/navigation'
+import { toast } from 'sonner'
+import Swal from 'sweetalert2'
 import AddTransactionModal from '@/components/transactions/AddTransactionModal'
 import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 
@@ -71,9 +73,29 @@ export default function TransactionsPage() {
   useDataRefresh(useCallback(() => { loadTransactions() }, [loadTransactions]))
 
   async function deleteTransaction(id: string) {
-    if (!confirm('ลบรายการนี้?')) return
-    await fetch(`/api/transactions/${id}`, { method: 'DELETE' })
-    setTransactions(prev => prev.filter(t => t.id !== id))
+    const tx = transactions.find(t => t.id === id)
+    const result = await Swal.fire({
+      title: 'ลบรายการนี้?',
+      html: tx
+        ? `<p><b>${tx.description}</b></p><p class="text-sm text-gray-500 mt-1">${tx.type === 'income' ? '+' : '-'}฿${tx.amount.toLocaleString()}</p>`
+        : undefined,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ลบเลย',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+    })
+    if (!result.isConfirmed) return
+
+    const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setTransactions(prev => prev.filter(t => t.id !== id))
+      toast.success('ลบรายการแล้ว')
+    } else {
+      const data = await res.json().catch(() => ({}))
+      toast.error(data.error || 'ลบรายการไม่สำเร็จ')
+    }
   }
 
   return (
