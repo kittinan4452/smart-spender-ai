@@ -10,7 +10,6 @@ const newCategories = [
   { name: 'ค่าไฟ / ค่าน้ำ', nameEn: 'Electricity & Water', icon: '⚡', color: '#d97706', type: 'expense' },
   { name: 'ค่าโทรศัพท์ / อินเทอร์เน็ต', nameEn: 'Phone & Internet', icon: '📱', color: '#0891b2', type: 'expense' },
   { name: 'ประกัน', nameEn: 'Insurance', icon: '🛡️', color: '#be185d', type: 'expense' },
-  { name: 'เงินเก็บ / ออมทรัพย์', nameEn: 'Savings', icon: '🏦', color: '#059669', type: 'expense' },
 ]
 
 async function main() {
