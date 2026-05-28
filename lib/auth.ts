@@ -20,22 +20,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials)
-        if (!parsed.success) return null
+        if (!parsed.success) {
+          console.warn('[auth] schema invalid:', parsed.error.issues)
+          return null
+        }
 
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
-        })
-        if (!user || !user.password) return null
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: parsed.data.email },
+          })
+          if (!user) {
+            console.warn('[auth] user not found:', parsed.data.email)
+            return null
+          }
+          if (!user.password) {
+            console.warn('[auth] user has no password:', parsed.data.email)
+            return null
+          }
 
-        const valid = await bcrypt.compare(parsed.data.password, user.password)
-        if (!valid) return null
+          const valid = await bcrypt.compare(parsed.data.password, user.password)
+          if (!valid) {
+            console.warn('[auth] password mismatch for:', parsed.data.email)
+            return null
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+          }
+        } catch (err) {
+          console.error('[auth] authorize error:', err)
+          return null
         }
       },
     }),

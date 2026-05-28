@@ -1,8 +1,11 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { emitDataChanged } from '@/lib/hooks/useDataRefresh'
 
 function renderMarkdown(text: string) {
+  if (!text) return null
   const lines = text.split('\n')
   const elements: React.ReactNode[] = []
   let i = 0
@@ -77,6 +80,7 @@ export default function AIChatWidget() {
   const [loading, setLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   async function send() {
     if (!input.trim() || loading) return
@@ -87,13 +91,22 @@ export default function AIChatWidget() {
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
 
     try {
+      const history = messages.slice(-10).map(m => ({
+        role: m.role === 'ai' ? ('assistant' as const) : ('user' as const),
+        content: m.text,
+      }))
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: question }),
+        body: JSON.stringify({ message: question, history }),
       })
       const data = await res.json()
-      setMessages(prev => [...prev, { role: 'ai', text: data.reply }])
+      const text = data.reply || data.error || 'ขออภัย ตอบไม่ได้'
+      setMessages(prev => [...prev, { role: 'ai', text }])
+      if (data.dbChanged) {
+        emitDataChanged()
+        router.refresh()
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'ai', text: 'ขออภัย เกิดข้อผิดพลาด กรุณาลองใหม่' }])
     } finally {
@@ -132,14 +145,27 @@ export default function AIChatWidget() {
                 <p className="text-indigo-200 text-xs mt-0.5">วิเคราะห์การเงินของคุณ</p>
               </div>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setMessages([])}
+                  title="ล้างการสนทนา"
+                  className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                    <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}

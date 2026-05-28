@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 
 interface Summary {
   income: number
@@ -33,16 +34,23 @@ export default function DashboardPage() {
 
   const now = new Date()
 
-  useEffect(() => {
-    const ac = new AbortController()
-    fetch(`/api/transactions/summary?month=${now.getMonth() + 1}&year=${now.getFullYear()}`, { signal: ac.signal })
+  const load = useCallback((signal?: AbortSignal) => {
+    fetch(`/api/transactions/summary?month=${now.getMonth() + 1}&year=${now.getFullYear()}`, { signal })
       .then(r => r.ok ? r.json() : null).then(d => d && setSummary(d))
       .catch(e => { if (e.name !== 'AbortError') console.error(e) })
-    fetch(`/api/transactions?limit=5`, { signal: ac.signal })
+    fetch(`/api/transactions?limit=5`, { signal })
       .then(r => r.ok ? r.json() : null).then(d => d && setRecent(d))
       .catch(e => { if (e.name !== 'AbortError') console.error(e) })
-    return () => ac.abort()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const ac = new AbortController()
+    load(ac.signal)
+    return () => ac.abort()
+  }, [load])
+
+  useDataRefresh(load)
 
   const expenseCategories = summary?.byCategory.filter(c => c.type === 'expense') || []
   const monthLabel = locale === 'th'

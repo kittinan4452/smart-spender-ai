@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend
@@ -20,13 +21,19 @@ export default function ReportsPage() {
   const [year, setYear] = useState(new Date().getFullYear())
   const [summary, setSummary] = useState<Summary | null>(null)
 
-  useEffect(() => {
-    const ac = new AbortController()
-    fetch(`/api/transactions/summary?month=${month}&year=${year}`, { signal: ac.signal })
+  const load = useCallback((signal?: AbortSignal) => {
+    fetch(`/api/transactions/summary?month=${month}&year=${year}`, { signal })
       .then(r => r.ok ? r.json() : null).then(d => d && setSummary(d))
       .catch(e => { if (e.name !== 'AbortError') console.error(e) })
-    return () => ac.abort()
   }, [month, year])
+
+  useEffect(() => {
+    const ac = new AbortController()
+    load(ac.signal)
+    return () => ac.abort()
+  }, [load])
+
+  useDataRefresh(load)
 
   const expenseData = summary?.byCategory.filter(c => c.type === 'expense').sort((a, b) => b.amount - a.amount) || []
   const barData = [

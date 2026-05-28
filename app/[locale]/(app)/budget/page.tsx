@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
+import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 
 interface BudgetRow {
   categoryId: string
@@ -61,6 +62,8 @@ export default function BudgetPage() {
     load(month, year, ac.signal)
     return () => ac.abort()
   }, [month, year, load])
+
+  useDataRefresh(useCallback(() => { load(month, year) }, [load, month, year]))
 
   async function save(categoryId: string, raw: string) {
     const amount = parseFloat(raw.replace(/,/g, ''))

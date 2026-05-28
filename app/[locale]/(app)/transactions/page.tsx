@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { useParams } from 'next/navigation'
 import AddTransactionModal from '@/components/transactions/AddTransactionModal'
+import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 
 interface Category {
   id: string
@@ -38,7 +39,7 @@ export default function TransactionsPage() {
   const [filterType, setFilterType] = useState('')
   const [loading, setLoading] = useState(true)
 
-  async function loadTransactions(signal?: AbortSignal) {
+  const loadTransactions = useCallback(async (signal?: AbortSignal) => {
     const url = filterType ? `/api/transactions?type=${filterType}` : '/api/transactions'
     try {
       const res = await fetch(url, { signal })
@@ -50,7 +51,7 @@ export default function TransactionsPage() {
         setLoading(false)
       }
     }
-  }
+  }, [filterType])
 
   useEffect(() => {
     const ac = new AbortController()
@@ -65,7 +66,9 @@ export default function TransactionsPage() {
     setLoading(true)
     loadTransactions(ac.signal)
     return () => ac.abort()
-  }, [filterType])
+  }, [loadTransactions])
+
+  useDataRefresh(useCallback(() => { loadTransactions() }, [loadTransactions]))
 
   async function deleteTransaction(id: string) {
     if (!confirm('ลบรายการนี้?')) return
