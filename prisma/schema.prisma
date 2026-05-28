@@ -18,15 +18,15 @@ model User {
   currency      String        @default("THB")
   language      String        @default("th")
   aiProvider    String        @default("google")
-  aiModel       String?
   aiApiKey      String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  aiModel       String?
   accounts      Account[]
+  budgets       Budget[]
+  categories    Category[]
   sessions      Session[]
   transactions  Transaction[]
-  categories    Category[]
-  budgets       Budget[]
 }
 
 model Account {
@@ -72,10 +72,10 @@ model Category {
   type         String        @default("expense")
   isDefault    Boolean       @default(false)
   userId       String?
+  createdAt    DateTime      @default(now())
+  budgets      Budget[]
   user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
-  budgets      Budget[]
-  createdAt    DateTime      @default(now())
 }
 
 model Transaction {
@@ -89,10 +89,10 @@ model Transaction {
   aiGenerated Boolean  @default(false)
   rawInput    String?
   note        String?
-  category    Category @relation(fields: [categoryId], references: [id])
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id])
 }
 
 model Budget {
@@ -103,9 +103,9 @@ model Budget {
   year       Int
   categoryId String
   userId     String
-  category   Category @relation(fields: [categoryId], references: [id])
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, categoryId, month, year])
 }

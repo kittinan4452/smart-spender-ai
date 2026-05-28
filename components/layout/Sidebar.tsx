@@ -9,6 +9,7 @@ import ThemeToggle from './ThemeToggle'
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: '📊' },
   { key: 'transactions', href: '/transactions', icon: '💳' },
+  { key: 'budget', href: '/budget', icon: '🎯' },
   { key: 'reports', href: '/reports', icon: '📈' },
   { key: 'settings', href: '/settings', icon: '⚙️' },
 ]
@@ -46,7 +47,7 @@ export default function Sidebar() {
               }`}
             >
               <span className="text-xl">{item.icon}</span>
-              {t(item.key as 'dashboard' | 'transactions' | 'reports' | 'settings')}
+              {t(item.key as 'dashboard' | 'transactions' | 'budget' | 'reports' | 'settings')}
             </Link>
           )
         })}

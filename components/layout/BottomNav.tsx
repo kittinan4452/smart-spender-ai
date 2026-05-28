@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react'
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: '📊' },
   { key: 'transactions', href: '/transactions', icon: '💳' },
+  { key: 'budget', href: '/budget', icon: '🎯' },
   { key: 'reports', href: '/reports', icon: '📈' },
   { key: 'settings', href: '/settings', icon: '⚙️' },
 ]
@@ -43,7 +44,7 @@ export default function BottomNav() {
             >
               <span className="text-xl leading-none">{item.icon}</span>
               <span className="text-[10px]">
-                {item.key === 'admin' ? 'Admin' : t(item.key as 'dashboard' | 'transactions' | 'reports' | 'settings')}
+                {item.key === 'admin' ? 'Admin' : t(item.key as 'dashboard' | 'transactions' | 'budget' | 'reports' | 'settings')}
               </span>
             </Link>
           )
