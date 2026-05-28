@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Smart Spender AI",
+    "tagline": "จัดการการเงินด้วย AI"
+  },
+  "nav": {
+    "dashboard": "ภาพรวม",
+    "transactions": "รายการ",
+    "reports": "รายงาน",
+    "settings": "ตั้งค่า",
+    "logout": "ออกจากระบบ"
+  },
+  "auth": {
+    "login": "เข้าสู่ระบบ",
+    "register": "สมัครสมาชิก",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "name": "ชื่อ",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "loginButton": "เข้าสู่ระบบ",
+    "registerButton": "สมัครสมาชิก",
+    "noAccount": "ยังไม่มีบัญชี?",
+    "hasAccount": "มีบัญชีแล้ว?",
+    "loginError": "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+  },
+  "dashboard": {
+    "totalBalance": "ยอดคงเหลือ",
+    "income": "รายรับ",
+    "expense": "รายจ่าย",
+    "thisMonth": "เดือนนี้",
+    "recentTransactions": "รายการล่าสุด",
+    "topCategories": "หมวดหมู่ยอดนิยม",
+    "budget": "งบประมาณ"
+  },
+  "transaction": {
+    "add": "เพิ่มรายการ",
+    "addManual": "กรอกเอง",
+    "addAI": "ใช้ AI",
+    "income": "รายรับ",
+    "expense": "รายจ่าย",
+    "amount": "จำนวนเงิน",
+    "category": "หมวดหมู่",
+    "date": "วันที่",
+    "description": "รายละเอียด",
+    "note": "หมายเหตุ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "aiPlaceholder": "เช่น: กินข้าวกลางวัน KFC 150 บาท หรือ รับเงินเดือน 30,000 บาท",
+    "aiAnalyze": "วิเคราะห์ด้วย AI",
+    "aiAnalyzing": "กำลังวิเคราะห์...",
+    "noTransactions": "ยังไม่มีรายการ",
+    "filter": "กรอง",
+    "search": "ค้นหา"
+  },
+  "category": {
+    "food": "อาหาร & เครื่องดื่ม",
+    "transport": "เดินทาง",
+    "housing": "ที่พัก",
+    "health": "สุขภาพ",
+    "entertainment": "บันเทิง",
+    "shopping": "ช้อปปิ้ง",
+    "education": "การศึกษา",
+    "utilities": "ค่าสาธารณูปโภค",
+    "others": "อื่นๆ",
+    "salary": "เงินเดือน",
+    "extraIncome": "รายได้พิเศษ",
+    "investment": "ลงทุน"
+  },
+  "settings": {
+    "title": "ตั้งค่า",
+    "profile": "โปรไฟล์",
+    "aiProvider": "ผู้ให้บริการ AI",
+    "language": "ภาษา",
+    "currency": "สกุลเงิน",
+    "save": "บันทึก",
+    "saved": "บันทึกแล้ว",
+    "apiKey": "API Key",
+    "selectProvider": "เลือก AI Provider"
+  },
+  "reports": {
+    "title": "รายงาน",
+    "monthly": "รายเดือน",
+    "yearly": "รายปี",
+    "byCategory": "แยกตามหมวดหมู่",
+    "trend": "แนวโน้ม"
+  },
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "confirm": "ยืนยัน",
+    "back": "กลับ",
+    "baht": "บาท",
+    "thb": "฿"
+  }
+}

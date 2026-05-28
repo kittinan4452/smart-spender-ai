@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Smart Spender AI",
+    "tagline": "Manage your finances with AI"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Sign Out"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "confirmPassword": "Confirm Password",
+    "loginButton": "Sign In",
+    "registerButton": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginError": "Invalid email or password"
+  },
+  "dashboard": {
+    "totalBalance": "Total Balance",
+    "income": "Income",
+    "expense": "Expense",
+    "thisMonth": "This Month",
+    "recentTransactions": "Recent Transactions",
+    "topCategories": "Top Categories",
+    "budget": "Budget"
+  },
+  "transaction": {
+    "add": "Add Transaction",
+    "addManual": "Manual Entry",
+    "addAI": "Use AI",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "date": "Date",
+    "description": "Description",
+    "note": "Note",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "aiPlaceholder": "e.g. Lunch at KFC 150 baht or Received salary 30,000 baht",
+    "aiAnalyze": "Analyze with AI",
+    "aiAnalyzing": "Analyzing...",
+    "noTransactions": "No transactions yet",
+    "filter": "Filter",
+    "search": "Search"
+  },
+  "category": {
+    "food": "Food & Drinks",
+    "transport": "Transport",
+    "housing": "Housing",
+    "health": "Health",
+    "entertainment": "Entertainment",
+    "shopping": "Shopping",
+    "education": "Education",
+    "utilities": "Utilities",
+    "others": "Others",
+    "salary": "Salary",
+    "extraIncome": "Extra Income",
+    "investment": "Investment"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "aiProvider": "AI Provider",
+    "language": "Language",
+    "currency": "Currency",
+    "save": "Save",
+    "saved": "Saved",
+    "apiKey": "API Key",
+    "selectProvider": "Select AI Provider"
+  },
+  "reports": {
+    "title": "Reports",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "byCategory": "By Category",
+    "trend": "Trend"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "baht": "Baht",
+    "thb": "฿"
+  }
+}
