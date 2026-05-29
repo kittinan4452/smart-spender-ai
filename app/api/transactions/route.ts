@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
   const month = searchParams.get('month')
   const year = searchParams.get('year')
   const type = searchParams.get('type')
-  const limit = parseInt(searchParams.get('limit') || '50')
+  const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
+  const skip = Math.max(parseInt(searchParams.get('skip') || '0'), 0)
 
   const where: Record<string, unknown> = { userId: session.user.id }
 
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
     where,
     include: { category: true },
     orderBy: { date: 'desc' },
+    skip,
     take: limit,
   })
 

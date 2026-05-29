@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         where: { userId, type: 'expense', date: { gte: threeMonthsAgo }, categoryId: { in: categoryIds } },
         include: { category: true },
       }),
-      prisma.user.findUnique({ where: { id: userId }, select: { aiModel: true, aiApiKey: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { aiApiKey: true } }),
     ])
   } catch (err) {
     const code = (err as { code?: string })?.code
@@ -98,8 +98,7 @@ ${catList}
 - หมวดที่ยังไม่มีประวัติ ให้ประมาณการตามค่ามาตรฐานทั่วไป พร้อมเหตุผลสั้นๆ`
 
   try {
-    const preferred = user?.aiModel || OPENROUTER_DEFAULT_TEXT_MODEL
-    const result = await runWithOpenRouterFallback(user?.aiApiKey, preferred, (_, model) =>
+    const result = await runWithOpenRouterFallback(user?.aiApiKey, OPENROUTER_DEFAULT_TEXT_MODEL, (_, model) =>
       generateObject({
         model,
         prompt,

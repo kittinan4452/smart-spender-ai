@@ -17,12 +17,12 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { id: session.user.id } })
     const apiKey = user?.aiApiKey || undefined
-    const aiModel = user?.aiModel || undefined
+    const visionModel = user?.aiModel || undefined
     const language = (user?.language || 'th') as 'th' | 'en'
 
     const result = imageBase64
-      ? await analyzeTransactionImage(imageBase64, mimeType || 'image/png', text || '', 'openrouter', apiKey, language)
-      : await analyzeTransaction(text, 'openrouter', apiKey, language, aiModel)
+      ? await analyzeTransactionImage(imageBase64, mimeType || 'image/png', text || '', 'openrouter', apiKey, language, visionModel)
+      : await analyzeTransaction(text, 'openrouter', apiKey, language)
 
     const categories = await prisma.category.findMany({
       where: { OR: [{ userId: session.user.id }, { isDefault: true }] },

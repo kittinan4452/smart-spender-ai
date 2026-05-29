@@ -3,7 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 export type AIProvider = 'openrouter'
 
 export const OPENROUTER_DEFAULT_TEXT_MODEL = 'deepseek/deepseek-v4-flash'
-export const OPENROUTER_DEFAULT_VISION_MODEL = 'google/gemini-2.5-flash-lite'
+export const OPENROUTER_DEFAULT_VISION_MODEL = 'google/gemini-3.1-flash-lite'
 
 export const OPENROUTER_FREE_MODELS = [
   {
@@ -13,27 +13,21 @@ export const OPENROUTER_FREE_MODELS = [
     vision: false,
   },
   {
+    id: 'google/gemini-3.1-flash-lite',
+    name: 'Gemini 3.1 Flash Lite',
+    description: 'Google Gemini, อ่านภาพสลิป, เร็ว, ภาษาไทยดี (แนะนำ)',
+    vision: true,
+  },
+  {
     id: 'google/gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash Lite',
-    description: 'Google Gemini, อ่านภาพสลิป, ฉลาด, ภาษาไทยดี',
-    vision: true,
-  },
-  {
-    id: 'nvidia/nemotron-nano-12b-v2-vl:free',
-    name: 'Nemotron Nano 12B VL',
-    description: 'NVIDIA, เน้นวิเคราะห์ภาพ',
-    vision: true,
-  },
-  {
-    id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-    name: 'Nemotron 3 Nano Omni 30B',
-    description: 'NVIDIA reasoning, multimodal',
+    description: 'Google Gemini รุ่นก่อน, อ่านภาพสลิป, ภาษาไทยดี',
     vision: true,
   },
 ]
 
 export const OPENROUTER_FREE_VISION_MODELS = OPENROUTER_FREE_MODELS.filter(m => m.vision)
-export const OPENROUTER_FREE_TEXT_MODELS = OPENROUTER_FREE_MODELS
+export const OPENROUTER_FREE_TEXT_MODELS = OPENROUTER_FREE_MODELS.filter(m => !m.vision)
 
 export const AI_PROVIDERS = [
   {
@@ -52,7 +46,7 @@ export function hasKey(_provider: AIProvider, userKey?: string | null): boolean 
 }
 
 export function getOpenRouterModelChain(preferred?: string | null, needsVision = false): string[] {
-  const models = needsVision ? OPENROUTER_FREE_VISION_MODELS : OPENROUTER_FREE_MODELS
+  const models = needsVision ? OPENROUTER_FREE_VISION_MODELS : OPENROUTER_FREE_TEXT_MODELS
   const ids = models.map(m => m.id)
   const pref = preferred || (needsVision ? OPENROUTER_DEFAULT_VISION_MODEL : OPENROUTER_DEFAULT_TEXT_MODEL)
   if (!ids.includes(pref)) return ids

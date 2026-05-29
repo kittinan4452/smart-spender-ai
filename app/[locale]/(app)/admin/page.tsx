@@ -160,8 +160,8 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* Users — Desktop Table */}
-      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+      {/* Users — Desktop Table (≥ lg / 1024px) */}
+      <div className="hidden lg:block bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
         <div className="p-5 border-b border-gray-100 dark:border-gray-800">
           <h2 className="font-semibold text-gray-800 dark:text-gray-200">รายชื่อผู้ใช้</h2>
         </div>
@@ -236,8 +236,8 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Users — Mobile Cards */}
-      <div className="md:hidden space-y-3">
+      {/* Users — Mobile + iPad Cards (< lg / 1024px) */}
+      <div className="lg:hidden space-y-3">
         <h2 className="font-semibold text-gray-800 dark:text-gray-200">รายชื่อผู้ใช้</h2>
         {stats.users.map(user => (
           <div key={user.id} className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">

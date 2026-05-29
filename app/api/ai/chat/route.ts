@@ -49,8 +49,7 @@ export async function POST(req: NextRequest) {
       { role: 'user' as const, content: message },
     ]
 
-    const preferred = user?.aiModel || OPENROUTER_DEFAULT_TEXT_MODEL
-    const result = await runWithOpenRouterFallback(user?.aiApiKey, preferred, (_, model) =>
+    const result = await runWithOpenRouterFallback(user?.aiApiKey, OPENROUTER_DEFAULT_TEXT_MODEL, (_, model) =>
       generateText({
         model,
         system: systemPrompt,

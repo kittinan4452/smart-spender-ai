@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { OPENROUTER_FREE_TEXT_MODELS, OPENROUTER_DEFAULT_TEXT_MODEL, OPENROUTER_DEFAULT_VISION_MODEL, OPENROUTER_FREE_MODELS } from '@/lib/ai/providers'
+import { OPENROUTER_FREE_VISION_MODELS, OPENROUTER_DEFAULT_TEXT_MODEL, OPENROUTER_DEFAULT_VISION_MODEL, OPENROUTER_FREE_MODELS } from '@/lib/ai/providers'
 
 interface UserSettings {
   name: string
@@ -109,48 +109,50 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">🤖 {t('aiProvider')}</h2>
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">ใช้ OpenRouter — ฟรี, อ่านภาพด้วย Gemma, วิเคราะห์ข้อความด้วย DeepSeek</p>
 
-          {/* Vision model — fixed */}
-          <div className="mb-4 p-3 rounded-xl bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
-            <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">📷 อ่านภาพสลิป (อัตโนมัติ)</p>
+          {/* Text model — fixed (DeepSeek always) */}
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
+            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-0.5">💬 วิเคราะห์ข้อความ (อัตโนมัติ)</p>
             <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-              {OPENROUTER_FREE_MODELS.find(m => m.id === OPENROUTER_DEFAULT_VISION_MODEL)?.name}
+              {OPENROUTER_FREE_MODELS.find(m => m.id === OPENROUTER_DEFAULT_TEXT_MODEL)?.name}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {OPENROUTER_FREE_MODELS.find(m => m.id === OPENROUTER_DEFAULT_VISION_MODEL)?.description}
+              {OPENROUTER_FREE_MODELS.find(m => m.id === OPENROUTER_DEFAULT_TEXT_MODEL)?.description}
             </p>
           </div>
 
-          {/* Text model — user-selectable */}
+          {/* Vision model — user-selectable */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              💬 วิเคราะห์ข้อความ <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">(เลือกได้)</span>
+              📷 อ่านภาพสลิป <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">(เลือกได้)</span>
             </label>
             <div className="space-y-2">
-              {OPENROUTER_FREE_TEXT_MODELS.map(m => (
-                <label
-                  key={m.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                    (settings.aiModel || OPENROUTER_DEFAULT_TEXT_MODEL) === m.id
-                      ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="aiModel"
-                    value={m.id}
-                    checked={(settings.aiModel || OPENROUTER_DEFAULT_TEXT_MODEL) === m.id}
-                    onChange={e => setSettings({ ...settings, aiModel: e.target.value })}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{m.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{m.description}</p>
-                  </div>
-                  {m.vision && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">📷</span>
-                  )}
-                </label>
-              ))}
+              {OPENROUTER_FREE_VISION_MODELS.map(m => {
+                const currentVision = OPENROUTER_FREE_VISION_MODELS.some(v => v.id === settings.aiModel)
+                  ? settings.aiModel
+                  : OPENROUTER_DEFAULT_VISION_MODEL
+                return (
+                  <label
+                    key={m.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                      currentVision === m.id
+                        ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="aiModel"
+                      value={m.id}
+                      checked={currentVision === m.id}
+                      onChange={e => setSettings({ ...settings, aiModel: e.target.value })}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{m.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{m.description}</p>
+                    </div>
+                  </label>
+                )
+              })}
             </div>
           </div>
 

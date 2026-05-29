@@ -1,6 +1,6 @@
 import { generateObject, generateText } from 'ai'
 import { z } from 'zod'
-import { AIProvider, runWithOpenRouterFallback, createOpenRouterClient, OPENROUTER_DEFAULT_TEXT_MODEL, OPENROUTER_DEFAULT_VISION_MODEL } from './providers'
+import { AIProvider, runWithOpenRouterFallback, OPENROUTER_DEFAULT_TEXT_MODEL, OPENROUTER_DEFAULT_VISION_MODEL } from './providers'
 
 const TransactionSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -28,11 +28,9 @@ export async function analyzeTransaction(
   _provider: AIProvider = 'openrouter',
   apiKey?: string | null,
   language: 'th' | 'en' = 'th',
-  aiModel?: string | null
 ): Promise<AnalyzedTransaction> {
-  // Text analysis → DeepSeek preferred (user can override via aiModel)
-  const preferred = aiModel || OPENROUTER_DEFAULT_TEXT_MODEL
-  const { object } = await runWithOpenRouterFallback(apiKey, preferred, (_, model) =>
+  // Text analysis → always DeepSeek
+  const { object } = await runWithOpenRouterFallback(apiKey, OPENROUTER_DEFAULT_TEXT_MODEL, (_, model) =>
     generateObject({
       model,
       schema: TransactionSchema,
@@ -50,26 +48,32 @@ export async function analyzeTransactionImage(
   _provider: AIProvider = 'openrouter',
   apiKey?: string | null,
   language: 'th' | 'en' = 'th',
+  visionModel?: string | null,
 ): Promise<AnalyzedTransaction> {
-  // Step 1: Gemini reads the image → extract text
-  const client = createOpenRouterClient(apiKey)
-  console.log(`[AI Pipeline] Step 1: ${OPENROUTER_DEFAULT_VISION_MODEL} reading image...`)
-  const { text: extractedText } = await generateText({
-    model: client.chat(OPENROUTER_DEFAULT_VISION_MODEL),
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'image', image: `data:${mimeType};base64,${imageBase64}` },
-        {
-          type: 'text',
-          text: `อ่านข้อมูลทั้งหมดจากภาพสลิป/ใบเสร็จนี้ให้ครบถ้วน ได้แก่ รายการสินค้า ราคา วันที่ ยอดรวม ชื่อร้าน${text ? ` (${text})` : ''}`,
-        },
-      ],
-    }],
-  })
+  // Step 1: vision model reads image → extract text (user-selectable, falls back across vision models)
+  const visionPreferred = visionModel || OPENROUTER_DEFAULT_VISION_MODEL
+  console.log(`[AI Pipeline] Step 1: vision (preferred=${visionPreferred}) reading image...`)
+  const { text: extractedText } = await runWithOpenRouterFallback(
+    apiKey,
+    visionPreferred,
+    (_, model) => generateText({
+      model,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', image: `data:${mimeType};base64,${imageBase64}` },
+          {
+            type: 'text',
+            text: `อ่านข้อมูลทั้งหมดจากภาพสลิป/ใบเสร็จนี้ให้ครบถ้วน ได้แก่ รายการสินค้า ราคา วันที่ ยอดรวม ชื่อร้าน${text ? ` (${text})` : ''}`,
+          },
+        ],
+      }],
+    }),
+    true,
+  )
   console.log(`[AI Pipeline] Step 1 done, extracted: ${extractedText.slice(0, 100)}...`)
 
-  // Step 2: DeepSeek analyzes extracted text → structured transaction
+  // Step 2: DeepSeek analyzes extracted text → structured transaction (always)
   console.log(`[AI Pipeline] Step 2: ${OPENROUTER_DEFAULT_TEXT_MODEL} analyzing extracted text...`)
   const { object } = await runWithOpenRouterFallback(apiKey, OPENROUTER_DEFAULT_TEXT_MODEL, (_, model) =>
     generateObject({
