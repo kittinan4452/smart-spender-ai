@@ -160,7 +160,7 @@ export default function AIPlanModal({ month, year, onClose, onApply }: Props) {
   const overSpendable = result ? totalAllocated > spendable : false
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[70] p-0 sm:p-4">
       <div className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
