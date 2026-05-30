@@ -177,7 +177,6 @@ export default function SlipUploadFAB() {
   async function save() {
     const amountNum = parseFloat(amount.replace(/,/g, ''))
     if (!amountNum || amountNum <= 0) { toast.error('กรุณากรอกจำนวนเงิน'); return }
-    if (!description.trim()) { toast.error('กรุณากรอกรายละเอียด'); return }
     if (!categoryId) { toast.error('กรุณาเลือกหมวด'); return }
 
     setSaving(true)
@@ -337,7 +336,7 @@ export default function SlipUploadFAB() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">จำนวนเงิน (฿)</label>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">จำนวนเงิน (฿) <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -351,7 +350,7 @@ export default function SlipUploadFAB() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">รายละเอียด</label>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">รายละเอียด <span className="text-gray-400 font-normal">(ไม่บังคับ)</span></label>
                     <input
                       type="text"
                       value={description}
@@ -361,7 +360,7 @@ export default function SlipUploadFAB() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">หมวด</label>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">หมวด <span className="text-red-500">*</span></label>
                     <select
                       value={categoryId}
                       onChange={e => setCategoryId(e.target.value)}

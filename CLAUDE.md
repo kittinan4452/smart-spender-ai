@@ -43,13 +43,11 @@ There is no test suite configured.
 - Passwords are bcrypt-hashed. The admin account is created out-of-band via `scripts/create-admin.ts`; members self-register through `/api/users/register`.
 
 ### AI layer (`lib/ai/`)
+- All shared AI code lives in `lib/ai/` (`providers.ts`, `analyze.ts`, `chat-tools.ts`). There are **four** AI routes under `app/api/ai/`: `chat` (tool-calling assistant, uses `chat-tools.ts`), `analyze` (slip/receipt vision OCR → transaction, uses `analyze.ts`), `budget-plan` (one-shot budget recommendation, rendered by `components/budget/AIPlanModal.tsx`), and `providers` (lists available models for the settings UI).
 - **Only OpenRouter is supported** — `AIProvider` is a string union with a single value `'openrouter'`. `providers.ts` is the single source of truth. `OPENROUTER_FREE_MODELS` is the master list; `OPENROUTER_FREE_VISION_MODELS` and `OPENROUTER_FREE_TEXT_MODELS` are filtered views. `hasKey()` checks whether a server or per-user key exists.
-- **Two call patterns, never mix them:**
-  - `runWithOpenRouterFallback(apiKey, preferred, run, needsVision?)` — used by the chat route. Builds a model chain (preferred first, then fallbacks) and retries on rate-limit or failure. `run` receives `(modelId, model)`.
-  - `getAIModel(provider, apiKey?, model?)` — used by the analyze route for one-shot vision calls.
-- Never call `createOpenAI` directly from routes; use the helpers above.
-- OpenRouter uses `@ai-sdk/openai` with `baseURL: 'https://openrouter.ai/api/v1'` (no `compatibility: 'compatible'` flag currently set).
-- `analyze.ts` wraps `generateObject` with a Zod schema and `mode: 'json'` (free models don't support structured outputs). The category name is fuzzy-matched against the user's `Category` rows in the API route.
+- **One call pattern: `runWithOpenRouterFallback(apiKey, preferredModel, run, needsVision?)`.** Every route (chat, analyze, budget-plan) uses it. It builds a model chain via `getOpenRouterModelChain` (preferred first, then the rest of the matching filtered view) and retries the next model on *any* failure. `run` receives `(modelId, model)` — call `generateText` / `generateObject` inside it with the provided `model`. Pass `needsVision = true` to restrict the chain to vision models. (`getAIModel` still exists in `providers.ts` but is no longer wired to any route — don't reach for it.)
+- Never call `createOpenAI` directly from routes; the helper (and `createOpenRouterClient`) configure `@ai-sdk/openai` with `baseURL: 'https://openrouter.ai/api/v1'` plus the required `HTTP-Referer`/`X-Title` headers.
+- `analyze.ts` runs a **two-step pipeline** for images: a vision model OCRs the slip/receipt to raw text (`generateText`, `needsVision`), then the default text model structures it into `TransactionSchema` (`generateObject`). Plain-text input skips step 1. The returned `categoryName` is fuzzy-matched against the user's `Category` rows in the API route (and again in `chat-tools.ts` via `matchCategory`).
 - `chat-tools.ts` exports `createChatTools(userId)` which returns `{ tools, mutated }`. The five tools (`addTransaction`, `deleteRecentTransaction`, `setBudget`, `getSummary`, `listRecentTransactions`) run server-side inside `generateText` with `stopWhen: stepCountIs(5)`. `mutated.changed` is set to `true` by any write tool — the chat route returns `dbChanged: true` in its response when this happens.
 
 ### Data-refresh pattern

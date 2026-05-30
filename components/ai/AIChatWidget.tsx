@@ -78,10 +78,34 @@ export default function AIChatWidget() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [listening, setListening] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const widgetRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
   const router = useRouter()
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop()
+      setListening(false)
+      return
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    const rec = new SpeechRecognition()
+    rec.lang = 'th-TH'
+    rec.interimResults = false
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript
+      setInput(prev => (prev ? prev + ' ' + text : text))
+    }
+    rec.onend = () => setListening(false)
+    rec.onerror = () => setListening(false)
+    recognitionRef.current = rec
+    rec.start()
+    setListening(true)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -238,9 +262,24 @@ export default function AIChatWidget() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-                placeholder="พิมพ์คำถาม..."
+                placeholder={listening ? 'กำลังฟัง...' : 'พิมพ์คำถาม...'}
                 className="flex-1 bg-transparent text-sm focus:outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
+              <button
+                onClick={toggleListening}
+                type="button"
+                className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                  listening
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400'
+                }`}
+                aria-label={listening ? 'หยุดฟัง' : 'พูด'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
+                  <path d="M6 10.5a.75.75 0 0 1 .75.75v1.5a5.25 5.25 0 1 0 10.5 0v-1.5a.75.75 0 0 1 1.5 0v1.5a6.751 6.751 0 0 1-6 6.709v2.291h3a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1 0-1.5h3v-2.291a6.751 6.751 0 0 1-6-6.709v-1.5A.75.75 0 0 1 6 10.5Z" />
+                </svg>
+              </button>
               <button
                 onClick={send}
                 disabled={loading || !input.trim()}

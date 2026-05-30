@@ -56,7 +56,41 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
   const [aiResult, setAiResult] = useState<AIResult | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [userProvider, setUserProvider] = useState<AIProvider | null>(null)
+  const [listening, setListening] = useState(false)
+  const [includeVat, setIncludeVat] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const VAT_RATE = 0.07
+  const parsedAmount = parseFloat(amount) || 0
+  const vatAmount = includeVat && parsedAmount > 0
+    ? parseFloat((parsedAmount * VAT_RATE / (1 + VAT_RATE)).toFixed(2))
+    : 0
+  const priceBeforeVat = includeVat && parsedAmount > 0
+    ? parseFloat((parsedAmount - vatAmount).toFixed(2))
+    : 0
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop()
+      setListening(false)
+      return
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    const rec = new SpeechRecognition()
+    rec.lang = 'th-TH'
+    rec.interimResults = false
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript
+      setAiText(prev => (prev ? prev + ' ' + text : text))
+    }
+    rec.onend = () => setListening(false)
+    rec.onerror = () => setListening(false)
+    recognitionRef.current = rec
+    rec.start()
+    setListening(true)
+  }
 
   useEffect(() => {
     if (mode === 'ai' && !userProvider) {
@@ -145,13 +179,24 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
     }
   }
 
-  async function handleSave() {
+  function resetForm() {
+    setAmount('')
+    setDescription('')
+    setCategoryId('')
+    setDate(format(new Date(), 'yyyy-MM-dd'))
+    setNote('')
+    setAiText('')
+    setAiImage(null)
+    setAiResult(null)
+  }
+
+  async function handleSave(andAddAnother = false) {
     const parsedAmount = parseFloat(amount)
     if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
       toast.error(t('invalidAmount'))
       return
     }
-    if (!description || !categoryId) return
+    if (!categoryId) return
     setSaving(true)
 
     try {
@@ -171,8 +216,14 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
       })
 
       if (res.ok) {
-        toast.success('บันทึกรายการแล้ว')
-        onSaved()
+        if (andAddAnother) {
+          toast.success('บันทึกแล้ว — เพิ่มรายการต่อไปได้เลย')
+          resetForm()
+          onSaved()
+        } else {
+          toast.success('บันทึกรายการแล้ว')
+          onSaved()
+        }
       } else {
         toast.error('บันทึกไม่สำเร็จ')
       }
@@ -185,8 +236,8 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 pb-24 md:pb-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] md:max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('add')}</h2>
@@ -261,16 +312,33 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
               {/* Text input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  หรือพิมพ์อธิบาย <span className="text-gray-400 font-normal">(ไม่บังคับ)</span>
+                  หรือพิมพ์/พูดอธิบาย <span className="text-gray-400 font-normal">(ไม่บังคับ)</span>
                 </label>
-                <textarea
-                  value={aiText}
-                  onChange={e => setAiText(e.target.value)}
-                  onPaste={handlePaste}
-                  placeholder={t('aiPlaceholder')}
-                  rows={2}
-                  className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-                />
+                <div className="relative">
+                  <textarea
+                    value={aiText}
+                    onChange={e => setAiText(e.target.value)}
+                    onPaste={handlePaste}
+                    placeholder={listening ? 'กำลังฟัง...' : t('aiPlaceholder')}
+                    rows={2}
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleListening}
+                    className={`absolute right-2 top-2 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                      listening
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950'
+                    }`}
+                    aria-label={listening ? 'หยุดฟัง' : 'พูด'}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
+                      <path d="M6 10.5a.75.75 0 0 1 .75.75v1.5a5.25 5.25 0 1 0 10.5 0v-1.5a.75.75 0 0 1 1.5 0v1.5a6.751 6.751 0 0 1-6 6.709v2.291h3a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1 0-1.5h3v-2.291a6.751 6.751 0 0 1-6-6.709v-1.5A.75.75 0 0 1 6 10.5Z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <button
@@ -314,7 +382,7 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount')} (฿)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount')} (฿) <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="decimal"
@@ -326,10 +394,30 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
                 className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                 placeholder="0.00"
               />
+              {type === 'expense' && (
+                <div className="mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                    <input
+                      type="checkbox"
+                      checked={includeVat}
+                      onChange={e => setIncludeVat(e.target.checked)}
+                      className="w-4 h-4 rounded accent-indigo-600"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">มี VAT 7% รวมอยู่ในยอดนี้</span>
+                  </label>
+                  {includeVat && parsedAmount > 0 && (
+                    <div className="mt-1.5 flex gap-3 text-xs bg-indigo-50 dark:bg-indigo-950 rounded-lg px-3 py-2 text-indigo-700 dark:text-indigo-300">
+                      <span>ราคาก่อน VAT: <strong>฿{priceBeforeVat.toLocaleString()}</strong></span>
+                      <span className="text-indigo-400">|</span>
+                      <span>VAT 7%: <strong>฿{vatAmount.toLocaleString()}</strong></span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('description')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('description')} <span className="text-gray-400 font-normal">({t('optional')})</span></label>
               <input
                 type="text"
                 value={description}
@@ -339,7 +427,7 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('category')}</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('category')} <span className="text-red-500">*</span></label>
               <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                 {filteredCategories.map(cat => (
                   <button
@@ -377,19 +465,28 @@ export default function AddTransactionModal({ categories, onClose, onSaved }: Pr
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6">
+          <div className="flex flex-col gap-2 mt-6">
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                onClick={() => handleSave(false)}
+                disabled={saving || !amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || !categoryId}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl py-3 text-sm font-medium transition-colors"
+              >
+                {saving ? '...' : t('save')}
+              </button>
+            </div>
             <button
-              onClick={onClose}
-              className="flex-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => handleSave(true)}
+              disabled={saving || !amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || !categoryId}
+              className="w-full border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 rounded-xl py-2.5 text-sm font-medium hover:bg-indigo-50 dark:hover:bg-indigo-950 disabled:opacity-50 transition-colors"
             >
-              {t('cancel')}
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0 || !description || !categoryId}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl py-3 text-sm font-medium transition-colors"
-            >
-              {saving ? '...' : t('save')}
+              {saving ? '...' : t('saveAndAddAnother')}
             </button>
           </div>
         </div>

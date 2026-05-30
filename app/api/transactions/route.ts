@@ -6,7 +6,7 @@ import { z } from 'zod'
 const createSchema = z.object({
   amount: z.number().positive(),
   type: z.enum(['income', 'expense']),
-  description: z.string().min(1),
+  description: z.string().optional(),
   categoryId: z.string(),
   date: z.string(),
   note: z.string().optional(),
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     const transaction = await prisma.transaction.create({
       data: {
         ...data,
+        description: data.description ?? '',
         date: new Date(data.date),
         userId: session.user.id,
       },
