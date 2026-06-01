@@ -13,6 +13,7 @@ interface Summary {
   income: number
   expense: number
   balance: number
+  totalBalance: number
   byCategory: { name: string; nameEn: string | null; icon: string; color: string; amount: number; type: string }[]
 }
 
@@ -86,10 +87,10 @@ export default function DashboardPage() {
             ฿{(summary?.expense || 0).toLocaleString()}
           </p>
         </div>
-        <div className={`rounded-2xl p-5 shadow-sm border ${(summary?.balance || 0) >= 0 ? 'bg-indigo-600 border-indigo-600' : 'bg-red-500 border-red-500'}`}>
+        <div className={`rounded-2xl p-5 shadow-sm border ${(summary?.totalBalance ?? 0) >= 0 ? 'bg-indigo-600 border-indigo-600' : 'bg-red-500 border-red-500'}`}>
           <p className="text-sm text-indigo-100 mb-1">{t('dashboard.totalBalance')}</p>
           <p className="text-2xl font-bold text-white">
-            ฿{(summary?.balance || 0).toLocaleString()}
+            ฿{(summary?.totalBalance ?? 0).toLocaleString()}
           </p>
         </div>
       </div>

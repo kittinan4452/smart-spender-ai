@@ -21,6 +21,12 @@ export async function GET(req: NextRequest) {
   const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
 
+  const allTransactions = await prisma.transaction.findMany({
+    where: { userId: session.user.id },
+    select: { amount: true, type: true },
+  })
+  const totalBalance = allTransactions.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
+
   const byCategory = transactions.reduce((acc: Record<string, { name: string; nameEn: string | null; icon: string; color: string; amount: number; type: string }>, t) => {
     const key = t.categoryId
     if (!acc[key]) {
@@ -30,5 +36,5 @@ export async function GET(req: NextRequest) {
     return acc
   }, {})
 
-  return NextResponse.json({ income, expense, balance: income - expense, byCategory: Object.values(byCategory) })
+  return NextResponse.json({ income, expense, balance: income - expense, totalBalance, byCategory: Object.values(byCategory) })
 }
