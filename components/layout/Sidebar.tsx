@@ -23,7 +23,7 @@ export default function Sidebar() {
   const isAdmin = session?.user?.role === 'admin'
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col min-h-screen shadow-sm">
+    <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col h-full overflow-y-auto shadow-sm">
       <div className="p-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <span className="text-2xl">💰</span>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { OPENROUTER_FREE_VISION_MODELS, OPENROUTER_DEFAULT_TEXT_MODEL, OPENROUTER_DEFAULT_VISION_MODEL, OPENROUTER_FREE_MODELS } from '@/lib/ai/providers'
+import GmailSyncCard from '@/components/settings/GmailSyncCard'
 
 interface UserSettings {
   name: string
@@ -170,6 +171,8 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ถ้าไม่ใส่ จะใช้ key จาก server (ถ้ามี)</p>
           </div>
         </div>
+
+        <GmailSyncCard />
 
         <button
           onClick={handleSave}

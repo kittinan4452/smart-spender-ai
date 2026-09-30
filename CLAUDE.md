@@ -68,3 +68,5 @@ There is no test suite configured.
 
 ### Required environment variables (`.env.local`)
 `DATABASE_URL`, `NEXTAUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `OPENROUTER_API_KEY`. The OpenRouter key can also be supplied per-user via settings (`aiApiKey` on `User`). `hasKey()` checks both; if neither is present the AI features are disabled.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — the Google OAuth client used both for "Sign in with Google" (`lib/auth.ts`) and the separate Gmail-notification sync flow (`app/api/gmail/*`, `lib/gmail/`). Gmail sync requests `gmail.readonly` through its own consent flow (not the login provider) so login doesn't force that scope on every user; see `lib/gmail/oauth.ts`. `gmail.readonly` is a Google *restricted* scope — the OAuth consent screen must stay in "Testing" status (≤100 test users added by email in Cloud Console) unless the project completes Google's CASA security assessment.
+- `CRON_SECRET` — bearer token checked by `app/api/cron/gmail-sync/route.ts` (paired with the `vercel.json` cron entry) so only Vercel's scheduler can trigger it.

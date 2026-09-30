@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import Swal from 'sweetalert2'
@@ -45,6 +46,7 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
+  const [emailPendingCount, setEmailPendingCount] = useState(0)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const itemsRef = useRef(items)
   useEffect(() => { itemsRef.current = items })
@@ -82,6 +84,19 @@ export default function TransactionsPage() {
       .catch(e => { if (e.name !== 'AbortError') console.error(e) })
     return () => ac.abort()
   }, [])
+
+  const loadEmailPendingCount = useCallback(() => {
+    fetch('/api/gmail/candidates')
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => setEmailPendingCount(Array.isArray(d) ? d.length : 0))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    loadEmailPendingCount()
+  }, [loadEmailPendingCount])
+
+  useDataRefresh(loadEmailPendingCount)
 
   useEffect(() => {
     const ac = new AbortController()
@@ -166,6 +181,16 @@ export default function TransactionsPage() {
           + {t('transaction.add')}
         </button>
       </div>
+
+      {emailPendingCount > 0 && (
+        <Link
+          href={`/${locale}/transactions/email-review`}
+          className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 mb-4 text-sm text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
+        >
+          <span>📧 ตรวจพบจากอีเมล {emailPendingCount} รายการ รอตรวจสอบ</span>
+          <span>→</span>
+        </Link>
+      )}
 
       {/* Month navigator */}
       <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl px-2 py-1.5 mb-4 border border-gray-100 dark:border-gray-800">

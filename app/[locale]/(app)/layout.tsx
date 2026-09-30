@@ -21,11 +21,11 @@ export default async function AppLayout({
 
   return (
     <SessionProvider session={session}>
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
         <div className="hidden md:flex">
           <Sidebar />
         </div>
-        <main className="flex-1 overflow-auto pb-20 md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
           <MobileHeader />
           {children}
         </main>

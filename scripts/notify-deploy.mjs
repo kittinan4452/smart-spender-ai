@@ -48,7 +48,7 @@ if (url) {
 }
 
 const payload = {
-  username: "Vercel Deploy",
+  username: "KITT",
   embeds: [
     {
       title: "🚀 Deploy started — smart-spender-ai",

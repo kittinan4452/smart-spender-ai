@@ -3,30 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String        @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String        @default("member")
-  currency      String        @default("THB")
-  language      String        @default("th")
-  aiProvider    String        @default("google")
-  aiApiKey      String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  aiModel       String?
-  accounts      Account[]
-  budgets       Budget[]
-  categories    Category[]
-  sessions      Session[]
-  transactions  Transaction[]
+  id              String                      @id @default(cuid())
+  name            String?
+  email           String                      @unique
+  emailVerified   DateTime?
+  image           String?
+  password        String?
+  role            String                      @default("member")
+  currency        String                      @default("THB")
+  language        String                      @default("th")
+  aiProvider      String                      @default("google")
+  aiApiKey        String?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  aiModel         String?
+  lineUserId      String?                     @unique
+  lineLinkCode    String?
+  lineLinkExpires DateTime?
+  accounts        Account[]
+  budgets         Budget[]
+  categories      Category[]
+  sessions        Session[]
+  transactions    Transaction[]
+  gmailAccount    GmailAccount?
+  emailCandidates EmailTransactionCandidate[]
 }
 
 model Account {
@@ -93,6 +98,41 @@ model Transaction {
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category    Category @relation(fields: [categoryId], references: [id])
+}
+
+model GmailAccount {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String
+  lastSyncedAt DateTime?
+  lastError    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailTransactionCandidate {
+  id                String    @id @default(cuid())
+  userId            String
+  gmailMessageId    String
+  type              String
+  amount            Float
+  description       String
+  categoryName      String
+  matchedCategoryId String?
+  date              DateTime?
+  confidence        Float
+  rawSnippet        String
+  status            String    @default("pending")
+  transactionId     String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gmailMessageId])
 }
 
 model Budget {
