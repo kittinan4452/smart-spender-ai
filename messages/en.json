@@ -8,6 +8,7 @@
     "transactions": "Transactions",
     "budget": "Budget",
     "reports": "Reports",
+    "gmailSync": "Email Sync",
     "settings": "Settings",
     "logout": "Sign Out"
   },

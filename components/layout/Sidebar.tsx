@@ -11,6 +11,7 @@ const navItems = [
   { key: 'transactions', href: '/transactions', icon: '💳' },
   { key: 'budget', href: '/budget', icon: '🎯' },
   { key: 'reports', href: '/reports', icon: '📈' },
+  { key: 'gmailSync', href: '/transactions/email-review', icon: '📧' },
   { key: 'settings', href: '/settings', icon: '⚙️' },
 ]
 
@@ -47,7 +48,7 @@ export default function Sidebar() {
               }`}
             >
               <span className="text-xl">{item.icon}</span>
-              {t(item.key as 'dashboard' | 'transactions' | 'budget' | 'reports' | 'settings')}
+              {t(item.key as 'dashboard' | 'transactions' | 'budget' | 'reports' | 'gmailSync' | 'settings')}
             </Link>
           )
         })}
