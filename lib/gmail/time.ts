@@ -32,3 +32,12 @@ export function bangkokMonthBounds({ year, month }: YearMonth): { start: Date; e
     end: new Date(Date.UTC(year, month, 1) - BKK_OFFSET_MS),
   }
 }
+
+/**
+ * The current Thai month, with its start pulled back to at least `lookbackMs` before `now` — so early in a
+ * month the window still reaches into the end of the previous one.
+ */
+export function currentMonthWithLookback(now: Date, lookbackMs: number): { start: Date; end: Date } {
+  const { start, end } = bangkokMonthBounds(currentBangkokMonth(now))
+  return { start: new Date(Math.min(start.getTime(), now.getTime() - lookbackMs)), end }
+}

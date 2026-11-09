@@ -66,6 +66,14 @@ export async function runGmailCatchUpSync(onReview?: () => void) {
     if (!data.ok) throw new Error(data.error || 'ซิงค์ไม่สำเร็จ')
 
     emitDataChanged()
+    if (data.retryAfterMs) {
+      toast.warning(`ซิงค์ได้บางส่วน (${data.created ?? 0} รายการใหม่)`, {
+        id,
+        description: 'Gmail จำกัดความถี่การดึงข้อมูล — ลองซิงค์อีกครั้งในอีกสักครู่',
+        action: onReview && data.created > 0 ? { label: 'ตรวจสอบ', onClick: onReview } : undefined,
+      })
+      return
+    }
     if (data.created > 0) {
       toast.success(`ตรวจพบ ${data.created} รายการใหม่จากอีเมล`, {
         id,
@@ -87,6 +95,21 @@ export class GmailReconnectNeededError extends Error {
   }
 }
 
+/** Consecutive rate-limit cooldowns before giving up on a month (the user can just restart). */
+const MAX_RATE_LIMIT_WAITS = 5
+
+function waitOrAbort(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise(resolve => {
+    const t = setTimeout(done, ms)
+    function done() {
+      clearTimeout(t)
+      signal?.removeEventListener('abort', done)
+      resolve()
+    }
+    signal?.addEventListener('abort', done, { once: true })
+  })
+}
+
 export interface MonthSyncTotals {
   found: number
   created: number
@@ -102,7 +125,8 @@ export async function syncGmailMonth(
 ): Promise<MonthSyncTotals> {
   const totals: MonthSyncTotals = { found: 0, created: 0 }
   let pageToken: string | undefined
-  do {
+  let rateLimitedInARow = 0
+  while (!opts.signal?.aborted) {
     const res = await fetch('/api/gmail/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,6 +140,20 @@ export async function syncGmailMonth(
     totals.created += data.created ?? 0
     opts.onProgress?.({ ...totals })
     pageToken = data.nextPageToken
-  } while (pageToken && !opts.signal?.aborted)
+
+    if (data.retryAfterMs) {
+      // Gmail's per-user quota is per minute: wait it out and resume the same page.
+      if (++rateLimitedInARow > MAX_RATE_LIMIT_WAITS) throw new Error('Gmail จำกัดความถี่การดึงข้อมูล ลองใหม่ภายหลัง')
+      toast.info('Gmail จำกัดความถี่การดึงข้อมูล', {
+        id: 'gmail-rate-limit',
+        description: `รอ ${Math.ceil(data.retryAfterMs / 1000)} วินาทีแล้วจะทำต่ออัตโนมัติ`,
+        duration: data.retryAfterMs,
+      })
+      await waitOrAbort(data.retryAfterMs, opts.signal)
+      continue
+    }
+    rateLimitedInARow = 0
+    if (!pageToken) break
+  }
   return totals
 }
