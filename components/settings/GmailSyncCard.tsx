@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { emitDataChanged } from '@/lib/hooks/useDataRefresh'
+import { emitDataChanged, useDataRefresh } from '@/lib/hooks/useDataRefresh'
+import { GmailReconnectNeededError, promptGmailReconnect, startGmailReconnect, syncGmailMonth } from '@/lib/gmail/client'
+import { currentBangkokMonth } from '@/lib/gmail/time'
+import GmailBackfill from '@/components/gmail/GmailBackfill'
 
 interface GmailStatus {
   connected: boolean
   lastSyncedAt: string | null
   lastError: string | null
+  needsReconnect: boolean
 }
 
 export default function GmailSyncCard() {
@@ -40,19 +44,27 @@ export default function GmailSyncCard() {
     loadPendingCount()
   }, [loadStatus, loadPendingCount])
 
+  // Refresh after the layout-level auto catch-up sync completes.
+  useDataRefresh(useCallback(() => {
+    loadStatus()
+    loadPendingCount()
+  }, [loadStatus, loadPendingCount]))
+
   async function handleSync() {
     setSyncing(true)
     setMessage(null)
     try {
-      const res = await fetch('/api/gmail/sync', { method: 'POST' })
-      const data = await res.json()
-      if (data.ok) {
-        setMessage(`ตรวจพบ ${data.created} รายการใหม่ (สแกน ${data.found} อีเมล)`)
+      const t = await syncGmailMonth(currentBangkokMonth())
+      setMessage(`ตรวจพบ ${t.created} รายการใหม่ (สแกน ${t.found} อีเมล)`)
+      loadStatus()
+      loadPendingCount()
+      emitDataChanged()
+    } catch (err) {
+      if (err instanceof GmailReconnectNeededError) {
         loadStatus()
-        loadPendingCount()
-        emitDataChanged()
+        promptGmailReconnect()
       } else {
-        setMessage(data.error || 'ซิงค์ไม่สำเร็จ')
+        setMessage(err instanceof Error ? err.message : 'ซิงค์ไม่สำเร็จ')
       }
     } finally {
       setSyncing(false)
@@ -71,7 +83,7 @@ export default function GmailSyncCard() {
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
       <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">📧 เชื่อมต่ออีเมล (Gmail)</h2>
       <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-        ตรวจจับรายรับ/รายจ่ายจากอีเมลแจ้งเตือนธนาคาร/e-wallet อัตโนมัติ (เฉพาะเดือนปัจจุบัน)
+        ตรวจจับรายรับ/รายจ่ายจากอีเมลแจ้งเตือนธนาคาร/e-wallet อัตโนมัติทุกวัน (เดือนปัจจุบัน) หรือซิงค์ย้อนหลังได้สูงสุด 1 ปี
       </p>
 
       {message && (
@@ -83,7 +95,11 @@ export default function GmailSyncCard() {
       {status.connected ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-gray-700 dark:text-gray-300">✅ เชื่อมต่อแล้ว</p>
+            {status.needsReconnect ? (
+              <p className="text-sm text-amber-600 dark:text-amber-400">⚠️ การเชื่อมต่อหมดอายุ ต้องเชื่อมต่อใหม่</p>
+            ) : (
+              <p className="text-sm text-gray-700 dark:text-gray-300">✅ เชื่อมต่อแล้ว</p>
+            )}
             <p className="text-xs text-gray-400 dark:text-gray-500">
               ซิงค์ล่าสุด: {status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString('th-TH') : 'ยังไม่เคย'}
             </p>
@@ -98,6 +114,14 @@ export default function GmailSyncCard() {
             )}
           </div>
           <div className="flex gap-2">
+            {status.needsReconnect ? (
+              <button
+                onClick={startGmailReconnect}
+                className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl px-4 py-2 transition-colors"
+              >
+                เชื่อมต่อใหม่
+              </button>
+            ) : (
             <button
               onClick={handleSync}
               disabled={syncing}
@@ -105,6 +129,7 @@ export default function GmailSyncCard() {
             >
               {syncing ? 'กำลังซิงค์...' : 'ซิงค์ตอนนี้'}
             </button>
+            )}
             <button
               onClick={handleDisconnect}
               className="border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-xl px-4 py-2 text-gray-600 dark:text-gray-300 transition-colors"
@@ -123,6 +148,15 @@ export default function GmailSyncCard() {
             เชื่อมต่อ Gmail
           </a>
         </>
+      )}
+
+      {status.connected && !status.needsReconnect && (
+        <GmailBackfill
+          onFinished={() => {
+            loadStatus()
+            loadPendingCount()
+          }}
+        />
       )}
     </div>
   )

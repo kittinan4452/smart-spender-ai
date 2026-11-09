@@ -6,6 +6,7 @@ import MobileHeader from '@/components/layout/MobileHeader'
 import SessionProvider from '@/components/layout/SessionProvider'
 import AIChatWidget from '@/components/ai/AIChatWidget'
 import SlipUploadFAB from '@/components/transactions/SlipUploadFAB'
+import GmailConnectionWatcher from '@/components/gmail/GmailConnectionWatcher'
 
 export default async function AppLayout({
   children,
@@ -33,6 +34,7 @@ export default async function AppLayout({
       <BottomNav />
       <SlipUploadFAB />
       <AIChatWidget />
+      <GmailConnectionWatcher />
     </SessionProvider>
   )
 }

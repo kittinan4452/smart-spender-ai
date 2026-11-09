@@ -1,11 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import EmailCandidatesReview from '@/components/gmail/EmailCandidatesReview'
+import { GmailReconnectNeededError, promptGmailReconnect, syncGmailMonth } from '@/lib/gmail/client'
+import { useDataRefresh } from '@/lib/hooks/useDataRefresh'
 
 export default function EmailReviewPage() {
   const params = useParams()
@@ -14,6 +16,9 @@ export default function EmailReviewPage() {
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+
+  // Reload candidates after the auto catch-up sync (or an AI mutation) finishes.
+  useDataRefresh(useCallback(() => setReloadToken(t => t + 1), []))
 
   const { month, year, monthLabel } = useMemo(() => {
     const d = new Date()
@@ -32,18 +37,14 @@ export default function EmailReviewPage() {
     setSyncing(true)
     setMessage(null)
     try {
-      const res = await fetch('/api/gmail/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, year }),
+      const t = await syncGmailMonth({ month, year }, {
+        // Show candidates as soon as each page lands rather than after the whole month.
+        onProgress: () => setReloadToken(n => n + 1),
       })
-      const data = await res.json()
-      if (data.ok) {
-        setMessage(`ตรวจพบ ${data.created} รายการใหม่ (สแกน ${data.found} อีเมล)`)
-        setReloadToken(t => t + 1)
-      } else {
-        setMessage(data.error || 'ซิงค์ไม่สำเร็จ')
-      }
+      setMessage(`ตรวจพบ ${t.created} รายการใหม่ (สแกน ${t.found} อีเมล)`)
+    } catch (err) {
+      if (err instanceof GmailReconnectNeededError) promptGmailReconnect()
+      else setMessage(err instanceof Error ? err.message : 'ซิงค์ไม่สำเร็จ')
     } finally {
       setSyncing(false)
     }
